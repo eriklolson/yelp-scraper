@@ -4,14 +4,15 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 def scrape_yelp_to_joplin_md(url):
-    # Set up Selenium with headless Chrome
     options = Options()
     options.add_argument("--headless")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
-    driver = webdriver.Chrome(options=options)
+    
+    # Tell Selenium to use Chromium
+    options.binary_location = "/usr/bin/chromium-browser"  # or "/usr/bin/chromium"
 
-    driver.get(url)
+    driver = webdriver.Chrome(options=options)
     time.sleep(5)  # Wait for JavaScript to render
 
     soup = BeautifulSoup(driver.page_source, 'html.parser')
@@ -34,17 +35,16 @@ def scrape_yelp_to_joplin_md(url):
     category = soup.select_one('span.css-1fdy0l5')  # usually shows $ and category
     category_text = category.get_text(strip=True) if category else 'N/A'
 
-	# Business photos (images with class "y-css-3xip89")
-	image_tags = soup.select('img.y-css-3xip89')
-	photos = []
-	for img in image_tags:
-	    src = img.get('src')
-	    alt = img.get('alt', 'Yelp photo')
-	    if src and src.startswith('https://'):
-	        photos.append(f"![{alt}]({src})")
-	    if len(photos) >= 10:
-	        break
-
+    # Business photos (images with class "y-css-3xip89")
+    image_tags = soup.select(' img.y-css-3xip89')
+    photos = []
+    for img in image_tags:
+        src = img.get('src')
+        alt = img.get('alt', 'Yelp photo')
+        if src and src.startswith('https://'):
+            photos.append(f"![{alt}]({src})")
+        if len(photos) >= 10:
+            break
 
     # Hours
     hours_md = ""
